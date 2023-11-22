@@ -19,7 +19,7 @@ routes(app); // Llama a la función `routes` pasando la instancia de la aplicaci
 
 // Iniciar el servidor
 const server = app.listen(port, (error) => { // Inicia el servidor Express y escucha en el puerto especificado
-    if (error) return console.log('Error: ${error}'); // Si ocurre un error al iniciar el servidor, muestra un mensaje de error en la consola
+    if (error) return console.log(`Error: ${error}`); // Si ocurre un error al iniciar el servidor, muestra un mensaje de error en la consola
 
-    console.log('El servidor escucha en el puerto ${server.address().port}'); // Si el servidor se inicia con éxito, muestra un mensaje indicando en qué puerto está escuchando
+    console.log(`El servidor escucha en el puerto ${server.address().port}`); // Si el servidor se inicia con éxito, muestra un mensaje indicando en qué puerto está escuchando
 });
