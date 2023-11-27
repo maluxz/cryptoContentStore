@@ -281,10 +281,26 @@ const router = app => {
         res.json({ mensaje: 'Este es un endpoint protegido', usuario: req.usuario.idusuario });
     });
 
-    app.get('/crearDireccion', async(request, response) => {
-        const newAddress = await bitcoin.getNewAddress();
-        response.json(newAddress);
+
+
+    // Endpoint para crear una nueva dirección asociada a un usuario autenticado
+app.get('/crearDireccion', authenticate, async (request, response) => {
+    const idUsuario = request.usuario.idusuario;
+  
+    // Generar una nueva dirección utilizando Bitcoin Core o el método que prefieras
+    const newAddress = await bitcoin.getNewAddress();
+  
+    // Insertar la dirección en la tabla direcciones
+    const sql = 'INSERT INTO direcciones (id_usuario, direccion) VALUES (?, ?)';
+    pool.query(sql, [idUsuario, newAddress], (err, result) => {
+      if (err) {
+        console.error('Error al insertar la dirección en la base de datos:', err);
+        response.status(500).json({ error: 'Error interno del servidor.' });
+      } else {
+        response.json({ mensaje: 'Dirección creada exitosamente', direccion: newAddress });
+      }
     });
+  });
 
 }
 
