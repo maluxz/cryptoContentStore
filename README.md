@@ -29,3 +29,5 @@ El proyecto ha sido organizado cuidadosamente para mejorar la claridad y manteni
 - **Rutas y Endpoints:**
   - Las rutas y endpoints han sido definidos de manera clara para facilitar la navegación y comprensión del flujo de la aplicación.
 
+## Autor
+- [Mario Lujan](https://github.com/maluxz)
