@@ -3,43 +3,22 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const { response } = require('express');
-const pool = require('../data/config'); // Asegúrate de proporcionar la ruta correcta al archivo config.js
-const bitcoinFunctions = require('../bitcoinFuntions');
+const pool = require('../config/mysql'); // Asegúrate de proporcionar la ruta correcta al archivo config.js
 
 const BitcoinCore = require('bitcoin-core');
 
 const config = {
-  username: 'mario',
-  password: 'Abc123',
-  host: '127.0.0.1', // Aquí especificas la dirección IP del nodo Bitcoin Core
-  port: 18332, // Puerto RPC de Testnet
-  wallet: 'contentStore',
+    username: 'mario',
+    password: 'Abc123',
+    host: '127.0.0.1', // Aquí especificas la dirección IP del nodo Bitcoin Core
+    port: 18332, // Puerto RPC de Testnet
+    wallet: 'contentStore',
 };
 
 
 const bitcoin = new BitcoinCore(config);
 
 const router = app => {
-    app.get('/about', (req, res) => {
-        const apiInfo = {
-          name: 'Mi API',
-          version: '1.0.0',
-          description: 'Una API simple para ...', // Agrega una breve descripción de tu API
-          author: 'Tu Nombre',
-          contact: 'tucorreo@example.com',
-          documentation: 'Enlace a la documentación de la API',
-          endpoints: {
-            about: '/about',
-            login: '/login',
-            protected: '/protected',
-            // ... otros endpoints de tu API
-          },
-        };
-      
-        res.json(apiInfo);
-      });
-
-
     app.get('/', (request, response) => {
         const apiInfo = {
             name: 'ContentStore API',
@@ -49,23 +28,23 @@ const router = app => {
             contact: 'contacto@mariolujan.com',
             documentation: 'Enlace a la documentación de la API',
             endpoints: {
-              about: '/',
-              users: '/usuarios',
-              login: '/login',
-              // ... otros endpoints de tu API
+                about: '/',
+                users: '/usuarios',
+                login: '/login',
+                // ... otros endpoints de API
             },
-          };
-        
-          response.json(apiInfo);
+        };
+
+        response.json(apiInfo);
     });
 
     app.get('/usuarios', (request, response) => {
         pool.query('SELECT * FROM usuarios',
-        (error, result) => {
-            if (error) throw error;
+            (error, result) => {
+                if (error) throw error;
 
-            response.send(result);
-        });
+                response.send(result);
+            });
     });
 
     // Ruta para consultar un ID específico en la tabla
@@ -102,15 +81,15 @@ const router = app => {
     });
 
     app.post('/usuarios', async (req, res) => {
-        const { nombre, pass } = req.body;
+        const { nombre, password } = req.body;
 
-        if (!nombre || !pass) {
+        if (!nombre || !password) {
             return res.status(400).json({ error: 'Se requieren nombre y contraseña' });
         }
 
         // Genera un salt y hashea la contraseña
         const saltRounds = 4;
-        const hashedPassword = await bcrypt.hash(pass, saltRounds);
+        const hashedPassword = await bcrypt.hash(password, saltRounds);
 
         pool.getConnection((error, connection) => {
             if (error) {
@@ -125,8 +104,9 @@ const router = app => {
                 if (error) {
                     return res.status(500).json({ error: 'Error al insertar datos en la base de datos' });
                 }
-
-                res.json({ mensaje: 'Datos insertados correctamente. ID Usuario: ' });
+                // Obtén el ID del usuario insertado
+                const userId = results.insertId;
+                res.json({ mensaje: 'Datos insertados correctamente. ID Usuario: ' + userId});
             });
         });
     });
@@ -172,8 +152,8 @@ const router = app => {
 
     app.delete('/usuarios', (request, response) => {
         response.send({
-           message: 'Debe específicar el ID a eliminar'
-           });
+            message: 'Debe específicar el ID a eliminar'
+        });
     });
 
     // Ruta para eliminar un usuario por su ID
@@ -214,39 +194,39 @@ const router = app => {
 
     const generateToken = (usuario) => {
         return jwt.sign({ idusuario: usuario.idusuario, nombre: usuario.nombre }, secretKey, { expiresIn: '1h' });
-      };
+    };
 
     app.post('/login', (req, res) => {
         const { nombre, password } = req.body;
-      
-        const sql = 'SELECT * FROM usuarios WHERE nombre = ?';
-      
-        pool.query(sql, [nombre], (err, result) => {
-          if (err) {
-            console.error('Error al realizar la consulta:', err);
-            return res.status(500).json({ mensaje: 'Error interno del servidor.' });
-          }
-      
-          if (result.length > 0) {
-            const usuario = result[0];
-            // Verificar la contraseña utilizando bcrypt
-            bcrypt.compare(password, usuario.password, (compareErr, match) => {
-              if (compareErr) {
-                console.error('Error al comparar contraseñas con bcrypt:', compareErr);
-                return res.status(500).json({ mensaje: 'Error interno del servidor.' });
-              }
-      
-              if (match) {
-                const token = generateToken(usuario);
-                res.json({ mensaje: 'Inicio de sesión exitoso', token });
-              } else {
 
+        const sql = 'SELECT * FROM usuarios WHERE nombre = ?';
+
+        pool.query(sql, [nombre], (err, result) => {
+            if (err) {
+                console.error('Error al realizar la consulta:', err);
+                return res.status(500).json({ mensaje: 'Error interno del servidor.' });
+            }
+
+            if (result.length > 0) {
+                const usuario = result[0];
+                // Verificar la contraseña utilizando bcrypt
+                bcrypt.compare(password, usuario.password, (compareErr, match) => {
+                    if (compareErr) {
+                        console.error('Error al comparar contraseñas con bcrypt:', compareErr);
+                        return res.status(500).json({ mensaje: 'Error interno del servidor.' });
+                    }
+
+                    if (match) {
+                        const token = generateToken(usuario);
+                        res.json({ mensaje: 'Inicio de sesión exitoso', token });
+                    } else {
+
+                        res.status(401).json({ mensaje: 'Credenciales inválidas' });
+                    }
+                });
+            } else {
                 res.status(401).json({ mensaje: 'Credenciales inválidas' });
-              }
-            });
-          } else {
-            res.status(401).json({ mensaje: 'Credenciales inválidas' });
-          }
+            }
         });
     });
 
@@ -254,24 +234,24 @@ const router = app => {
     // Middleware de autenticación
     const authenticate = (req, res, next) => {
         const token = req.headers.authorization;
-    
+
         if (!token) {
-        return res.status(401).json({ mensaje: 'Acceso no autorizado. Token no proporcionado.' });
+            return res.status(401).json({ mensaje: 'Acceso no autorizado. Token no proporcionado.' });
         }
-    
+
         // Verifica el token
         jwt.verify(token, secretKey, (err, decoded) => {
             if (err) {
-            return res.status(401).json({ mensaje: 'Acceso no autorizado. Token inválido.' });
+                return res.status(401).json({ mensaje: 'Acceso no autorizado. Token inválido.' });
             }
-        
+
             const usuario = decoded;
-        
+
             if (usuario) {
-            req.usuario = usuario;
-            next();
+                req.usuario = usuario;
+                next();
             } else {
-            res.status(401).json({ mensaje: 'Acceso no autorizado. Usuario no encontrado.' });
+                res.status(401).json({ mensaje: 'Acceso no autorizado. Usuario no encontrado.' });
             }
         });
     };
@@ -284,23 +264,23 @@ const router = app => {
 
 
     // Endpoint para crear una nueva dirección asociada a un usuario autenticado
-app.get('/crearDireccion', authenticate, async (request, response) => {
-    const idUsuario = request.usuario.idusuario;
-  
-    // Generar una nueva dirección utilizando Bitcoin Core o el método que prefieras
-    const newAddress = await bitcoin.getNewAddress();
-  
-    // Insertar la dirección en la tabla direcciones
-    const sql = 'INSERT INTO direcciones (id_usuario, direccion) VALUES (?, ?)';
-    pool.query(sql, [idUsuario, newAddress], (err, result) => {
-      if (err) {
-        console.error('Error al insertar la dirección en la base de datos:', err);
-        response.status(500).json({ error: 'Error interno del servidor.' });
-      } else {
-        response.json({ mensaje: 'Dirección creada exitosamente', direccion: newAddress });
-      }
+    app.get('/crearDireccion', authenticate, async (request, response) => {
+        const idUsuario = request.usuario.idusuario;
+
+        // Generar una nueva dirección utilizando Bitcoin Core o el método que prefieras
+        const newAddress = await bitcoin.getNewAddress();
+
+        // Insertar la dirección en la tabla direcciones
+        const sql = 'INSERT INTO direcciones (id_usuario, direccion) VALUES (?, ?)';
+        pool.query(sql, [idUsuario, newAddress], (err, result) => {
+            if (err) {
+                console.error('Error al insertar la dirección en la base de datos:', err);
+                response.status(500).json({ error: 'Error interno del servidor.' });
+            } else {
+                response.json({ mensaje: 'Dirección creada exitosamente', direccion: newAddress });
+            }
+        });
     });
-  });
 
 }
 
