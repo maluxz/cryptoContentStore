@@ -4,7 +4,7 @@ const config = {
     host: 'localhost',
     user: 'mario',
     password: 'Abc123',
-    database: 'api',
+    database: 'contentstore',
 };
 
 const pool = mysql.createPool(config);
