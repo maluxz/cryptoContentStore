@@ -111,7 +111,7 @@ async function run() {
     }
   }
 }
-
+// Comentario
 run().catch(error => console.error(error));
 
 // Función para obtener transacciones de un array de direcciones
