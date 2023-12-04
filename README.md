@@ -1,7 +1,7 @@
 # CryptoContentStore
+- API utilizando el Framework Express.js y que conecta a una base de datos MySQL y/o MSSQL Server.
 
 ## Descripción
-- API utilizando el Framework Express y que conecte a una base de datos MySQL y MSSQL Server
 - CryptoContentStore es un proyecto de tienda de contenido que permite a los usuarios realizar compras de productos digitales utilizando criptomonedas. Este proyecto fue iniciado como parte de la materia de Desarrollo Web Full Stack del Instituto Tecnológico de Delicias (TecNM).
 
 ## Características Principales
